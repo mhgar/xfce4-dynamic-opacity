@@ -3,5 +3,9 @@ set(CMAKE_C_STANDARD 11)
 
 project(source)
 
+# Create libs
+add_library(opacity SHARED opacity.c)
+add_library(opacity-dialogs SHARED opacity-dialogs.c)
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 add_subdirectory(common)
