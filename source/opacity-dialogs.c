@@ -66,14 +66,14 @@ GtkWidget* make_integer_slider(gint min, gint max) {
     return slider; // Please don't leak.
 }
 
-void bind_slider_value_to(GtkScale *slider, GObject *object, const gchar *property) {
-    GObject *adjustment;
+void bind_slider_value_to(GtkScale *slider, GObject *object, const gchar *property) {    
     guint value = 0; // Make polymorphic? This can't be a double if the binding is a uint.
     
     g_object_get(object, property, &value, NULL);
     gtk_range_set_value(GTK_RANGE(slider), value); // Seemed to be nessessary.
-
-    g_object_get(G_OBJECT(slider), "adjustment", &adjustment, NULL);
+    
+    GObject *adjustment; 
+    g_object_get(G_OBJECT(slider), "adjustment", &adjustment, NULL); // Should this be a ref?
     g_object_bind_property(
         G_OBJECT(adjustment), "value", 
         G_OBJECT(object), property,
@@ -90,12 +90,12 @@ GtkWidget* make_integer_spinner(gint min, gint max) {
 
 // Return GBinding*?
 void bind_spinner_value_to(GtkSpinButton *spinner, GObject *object, const gchar *property) {
-    GObject *adjustment;
     guint value = 0; // Make polymorphic? This can't be a double if the binding is a uint.
     
     g_object_get(object, property, &value, NULL);
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(spinner), value); // Seemed to be nessessary.
-
+    
+    GObject *adjustment;
     g_object_get(G_OBJECT(spinner), "adjustment", &adjustment, NULL);
     g_object_bind_property(
         G_OBJECT(adjustment), "value", 
@@ -106,9 +106,9 @@ void bind_spinner_value_to(GtkSpinButton *spinner, GObject *object, const gchar 
 }
 
 void bind_toggle_button_value_to(GtkToggleButton *toggle, GObject *object, const gchar *property) {
-    gboolean value;
-    
+    gboolean value;    
     g_object_get(object, property, &value, NULL);
+    
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(toggle), value); // Seemed to be nessessary.
 
     g_object_bind_property(
@@ -118,15 +118,12 @@ void bind_toggle_button_value_to(GtkToggleButton *toggle, GObject *object, const
     );
 }
 
-GtkWidget *make_style_settings(OpacityPlugin *plugin) {
-    GtkWidget *grid;
-    GtkWidget *override_style_check_button;
-    
-    grid = gtk_grid_new();    
+GtkWidget *make_style_settings(OpacityPlugin *plugin) {   
+    GtkWidget *grid = gtk_grid_new();    
     gtk_grid_set_column_spacing(GTK_GRID(grid), GRID_PADDING * 2);
     gtk_grid_set_row_spacing(GTK_GRID(grid), GRID_PADDING);
     
-    override_style_check_button = gtk_check_button_new_with_label("Allow forcing panel's background style");   
+    GtkWidget *override_style_check_button = gtk_check_button_new_with_label("Allow forcing panel's background style");   
     bind_toggle_button_value_to(GTK_TOGGLE_BUTTON(override_style_check_button), G_OBJECT(plugin), "override-style");
     
     gtk_grid_attach(GTK_GRID(grid), override_style_check_button, 0, 0, 1, 1);
@@ -136,45 +133,37 @@ GtkWidget *make_style_settings(OpacityPlugin *plugin) {
 }
 
 GtkWidget *make_alpha_settings(OpacityPlugin *plugin) {
-    GtkWidget *grid;
-    GtkWidget *near_alpha_label;
-    GtkWidget *near_alpha_slider;
-    GtkWidget *far_alpha_label;
-    GtkWidget *far_alpha_slider;
-    GtkWidget *transition_time_label;
-    GtkWidget *transition_time_spinner;
-    
-    grid = gtk_grid_new();
+    GtkWidget *grid = gtk_grid_new();
     
     gtk_grid_set_column_spacing(GTK_GRID(grid), GRID_PADDING * 2);
     gtk_grid_set_row_spacing(GTK_GRID(grid), GRID_PADDING);
     
     // Near alpha slider
-    near_alpha_label = gtk_label_new("Opacity when a window is near:");
+    GtkWidget *near_alpha_label = gtk_label_new("Opacity when a window is near:");
     gtk_grid_attach(GTK_GRID(grid), near_alpha_label, 0, 0, 1, 1);
     gtk_widget_set_halign(near_alpha_label, GTK_ALIGN_START);
     
-    near_alpha_slider = make_integer_slider(ALPHA_MIN, ALPHA_MAX);
+    GtkWidget *near_alpha_slider = make_integer_slider(ALPHA_MIN, ALPHA_MAX);
     bind_slider_value_to(GTK_SCALE(near_alpha_slider), G_OBJECT(plugin), "near-alpha");
     gtk_grid_attach_next_to(GTK_GRID(grid), near_alpha_slider, near_alpha_label, GTK_POS_RIGHT, 1, 1);
     gtk_widget_set_hexpand(near_alpha_slider, TRUE); // Needed for the other one?
     
     // Far alpha slider
-    far_alpha_label = gtk_label_new("Normal opacity:");
+    GtkWidget *far_alpha_label = gtk_label_new("Normal opacity:");
     gtk_grid_attach_next_to(GTK_GRID(grid), far_alpha_label, near_alpha_label, GTK_POS_BOTTOM, 1, 1);
     gtk_widget_set_halign(far_alpha_label, GTK_ALIGN_START);
     
-    far_alpha_slider = make_integer_slider(ALPHA_MIN, ALPHA_MAX);
+    GtkWidget *far_alpha_slider = make_integer_slider(ALPHA_MIN, ALPHA_MAX);
     bind_slider_value_to(GTK_SCALE(far_alpha_slider), G_OBJECT(plugin), "far-alpha");
     gtk_grid_attach_next_to(GTK_GRID(grid), far_alpha_slider, far_alpha_label, GTK_POS_RIGHT, 1, 1);
     gtk_widget_set_hexpand(far_alpha_slider, TRUE);
     
     // Transition time
-    transition_time_label = gtk_label_new("Transition time (ms):");
+    GtkWidget *transition_time_label = gtk_label_new("Transition time (ms):");
     gtk_grid_attach_next_to(GTK_GRID(grid), transition_time_label, far_alpha_label, GTK_POS_BOTTOM, 1, 1);
     gtk_widget_set_halign(transition_time_label, GTK_ALIGN_START);
     
-    transition_time_spinner = make_integer_spinner(TRANSITION_TIME_MIN, TRANSITION_TIME_MAX);
+    GtkWidget *transition_time_spinner = make_integer_spinner(TRANSITION_TIME_MIN, TRANSITION_TIME_MAX);
     bind_spinner_value_to(GTK_SPIN_BUTTON(transition_time_spinner), G_OBJECT(plugin), "transition-time");
     gtk_grid_attach_next_to(GTK_GRID(grid), transition_time_spinner, transition_time_label, GTK_POS_RIGHT, 1, 1);
     //gtk_widget_set_hexpand(transition_time_spinner, TRUE);
@@ -184,31 +173,25 @@ GtkWidget *make_alpha_settings(OpacityPlugin *plugin) {
 }
 
 GtkWidget *make_proximity_settings(OpacityPlugin *plugin) {
-    GtkWidget *grid;
-    GtkWidget *x_proximity_label;
-    GtkWidget *y_proximity_label;
-    GtkWidget *x_proximity_spinner;
-    GtkWidget *y_proximity_spinner;
-    
-    grid = gtk_grid_new();
+    GtkWidget *grid = gtk_grid_new();
     
     gtk_grid_set_column_spacing(GTK_GRID(grid), GRID_PADDING * 2);
     gtk_grid_set_row_spacing(GTK_GRID(grid), GRID_PADDING);
     
     // X proximity
-    x_proximity_label = gtk_label_new("Left and right (px):");
+    GtkWidget *x_proximity_label = gtk_label_new("Left and right (px):");
     gtk_grid_attach(GTK_GRID(grid), x_proximity_label, 0, 0, 1, 1);
     gtk_widget_set_halign(x_proximity_label, GTK_ALIGN_START);    
-    x_proximity_spinner = make_integer_spinner(TRANSITION_TIME_MIN, TRANSITION_TIME_MAX);
+    GtkWidget *x_proximity_spinner = make_integer_spinner(TRANSITION_TIME_MIN, TRANSITION_TIME_MAX);
     bind_spinner_value_to(GTK_SPIN_BUTTON(x_proximity_spinner), G_OBJECT(plugin), "x-proximity");
     gtk_grid_attach_next_to(GTK_GRID(grid), x_proximity_spinner, x_proximity_label, GTK_POS_RIGHT, 1, 1);
     gtk_widget_set_halign(x_proximity_spinner, GTK_ALIGN_START);
     
     // Y proximity
-    y_proximity_label = gtk_label_new("Up and down (px):");
+    GtkWidget *y_proximity_label = gtk_label_new("Up and down (px):");
     gtk_grid_attach_next_to(GTK_GRID(grid), y_proximity_label, x_proximity_label, GTK_POS_BOTTOM, 1, 1);
     gtk_widget_set_halign(y_proximity_label, GTK_ALIGN_START);    
-    y_proximity_spinner = make_integer_spinner(TRANSITION_TIME_MIN, TRANSITION_TIME_MAX);
+    GtkWidget *y_proximity_spinner = make_integer_spinner(TRANSITION_TIME_MIN, TRANSITION_TIME_MAX);
     bind_spinner_value_to(GTK_SPIN_BUTTON(y_proximity_spinner), G_OBJECT(plugin), "y-proximity");
     gtk_grid_attach_next_to(GTK_GRID(grid), y_proximity_spinner, y_proximity_label, GTK_POS_RIGHT, 1, 1);
     gtk_widget_set_halign(y_proximity_label, GTK_ALIGN_START);
@@ -217,22 +200,11 @@ GtkWidget *make_proximity_settings(OpacityPlugin *plugin) {
 }
 
 void opacity_plugin_configure(XfcePanelPlugin *panel_plugin) {
-    // Weird mixed compilation stuff means this is C89.
-    // Props to XFCE team for discovering time travel.
     OpacityPlugin *plugin = XFCE_OPACITY_PLUGIN(panel_plugin);
-    GtkWidget *dialog;
-    GtkWidget *container;
-    GtkWidget *main_grid;
-    GtkWidget *style_settings_label;
-    GtkWidget *style_settings;
-    GtkWidget *proximity_settings_label;
-    GtkWidget *proximity_settings;
-    GtkWidget *alpha_settings_label;
-    GtkWidget *alpha_settings;
 
     xfce_panel_plugin_block_menu(panel_plugin); // ?
     
-    dialog = xfce_titled_dialog_new_with_buttons(
+    GtkWidget *dialog = xfce_titled_dialog_new_with_buttons(
         _("Dynamic Opacity"),
         GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(panel_plugin))),
         GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -250,36 +222,36 @@ void opacity_plugin_configure(XfcePanelPlugin *panel_plugin) {
     gtk_container_set_border_width(GTK_CONTAINER(dialog), BORDER);
     
     // Actual settings widgets.
-    container = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
-    main_grid = gtk_grid_new();
+    GtkWidget *container = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+    GtkWidget *main_grid = gtk_grid_new();
     gtk_box_pack_start(GTK_BOX(container), main_grid, TRUE, TRUE, BORDER);
     gtk_grid_set_column_spacing(GTK_GRID(main_grid), 0);
     gtk_grid_set_row_spacing(GTK_GRID(main_grid), GRID_PADDING);
     
     // Styling.
-    style_settings_label = gtk_label_new(NULL);
+    GtkWidget *style_settings_label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(style_settings_label), "<b>Panel Style</b>");
     gtk_grid_attach(GTK_GRID(main_grid), style_settings_label, 0, 0, 1, 1); // First item
     gtk_widget_set_halign(style_settings_label, GTK_ALIGN_START);    
-    style_settings = make_style_settings(plugin);
+    GtkWidget *style_settings = make_style_settings(plugin);
     gtk_grid_attach_next_to(GTK_GRID(main_grid), style_settings, style_settings_label, GTK_POS_BOTTOM, 1, 1);
     gtk_widget_set_margin_start(style_settings, BORDER);
     
     // Make the proximity settings section.
-    proximity_settings_label = gtk_label_new(NULL);
+    GtkWidget *proximity_settings_label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(proximity_settings_label), "<b>Window Proximity</b>");
     gtk_grid_attach_next_to(GTK_GRID(main_grid), proximity_settings_label, style_settings, GTK_POS_BOTTOM, 1, 1);
     gtk_widget_set_halign(proximity_settings_label, GTK_ALIGN_START);    
-    proximity_settings = make_proximity_settings(plugin);
+    GtkWidget *proximity_settings = make_proximity_settings(plugin);
     gtk_grid_attach_next_to(GTK_GRID(main_grid), proximity_settings, proximity_settings_label, GTK_POS_BOTTOM, 1, 1);
     gtk_widget_set_margin_start(proximity_settings, BORDER);
     
     // Make the alpha settings section.
-    alpha_settings_label = gtk_label_new(NULL);
+    GtkWidget *alpha_settings_label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(alpha_settings_label), "<b>Opacity</b>");
     gtk_grid_attach_next_to(GTK_GRID(main_grid), alpha_settings_label, proximity_settings, GTK_POS_BOTTOM, 1, 1);
     gtk_widget_set_halign(alpha_settings_label, GTK_ALIGN_START);    
-    alpha_settings = make_alpha_settings(plugin);
+    GtkWidget *alpha_settings = make_alpha_settings(plugin);
     gtk_grid_attach_next_to(GTK_GRID(main_grid), alpha_settings, alpha_settings_label, GTK_POS_BOTTOM, 1, 1);
     gtk_widget_set_margin_start(alpha_settings, BORDER);
     
@@ -292,23 +264,25 @@ void opacity_plugin_about(XfcePanelPlugin *plugin) {
         NULL
     };
     
-    GdkPixbuf *icon = xfce_panel_pixbuf_from_source("xfce4-sample-plugin", NULL, 32);
+    // I don't have an icon.
+    //GdkPixbuf *icon = xfce_panel_pixbuf_from_source("xfce4-sample-plugin", NULL, 32);
     
     gtk_show_about_dialog (
         NULL,
-        "logo",         icon,
-        "license",      "GNU General Public License version 3 (GPLv3)",
+        "logo",         NULL,
+        "license",      "GNU General Public License version 2 (GPLv2)",
         "version",      "0.0.1",
         "program-name", "Dynamic Opacity",
-        "comments",     _("This is a sample plugin"),
+        "comments",     _("Changes the opacity of the panel when windows are near."),
         "website",      "",
         "copyright",    _("Copyright \xc2\xa9 2019 Maxwell Hunter\n"),
         "authors",      auth,
         NULL
     );
-    
+    /*
     if (icon) {
         g_object_unref(G_OBJECT(icon));
     }
+    */
 }
 
