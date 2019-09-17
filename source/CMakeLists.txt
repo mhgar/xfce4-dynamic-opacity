@@ -31,7 +31,7 @@ link_directories(${WNCK_LIBRARY_DIRS})
 
 
 # Create libs
-add_library(opacity-plugin opacity.c opacity-dialogs.c)
+add_library(opacity-plugin SHARED opacity.c opacity-dialogs.c)
 
 target_link_libraries(opacity-plugin common)
 target_link_libraries(opacity-plugin ${GLIB_LIBRARIES})
