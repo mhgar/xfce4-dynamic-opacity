@@ -43,7 +43,6 @@ target_link_libraries(opacity-plugin ${XFCONF_LIBRARY_DIRS})
 target_link_libraries(opacity-plugin ${WNCK_LIBRARY_DIRS})
 
 
-
-install(TARGETS opacity-plugin DESTINATION lib)
+install(FILES libopacity-plugin.so DESTINATION /lib/xfce4/panel/plugins/)
 
 add_subdirectory(common)

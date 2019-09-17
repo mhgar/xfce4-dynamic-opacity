@@ -1,0 +1,13 @@
+[Xfce Panel]
+Type=X-XFCE-PanelPlugin
+Encoding=UTF-8
+Name=Dynamic Opacity
+Comment=Sample plugin for the Xfce panel
+X-XFCE-Module=opacity-plugin
+X-XFCE-Module-Path=/usr/lib/xfce4/panel-plugins
+X-XFCE-Internal=true
+X-XFCE-Unique=false
+X-XFCE-API=2.0
+
+[Desktop Entry]
+Type=Application
