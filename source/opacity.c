@@ -394,7 +394,6 @@ static void opacity_plugin_init(OpacityPlugin *plugin) {
     plugin->is_near = DEFAULT_IS_NEAR;
 }
 
-// Static
 void opacity_plugin_transition_to_alpha(const guint interval_ms, OpacityPlugin *plugin) {
     gfloat dt = (gfloat) interval_ms / 1000.0f;
     dt *= ((gfloat) plugin->transition_time / 1000.0f);
@@ -422,17 +421,6 @@ void opacity_plugin_transition_to_alpha(const guint interval_ms, OpacityPlugin *
     */
 }
 
-static void panel_size_changed(GtkWidget *panel, GdkRectangle *allocation, gpointer data) {
-    // For some reason allocation->{x, y} doesn't work, so we need the window.
-    GdkWindow *window;
-    gint x, y;
-    
-    window = gtk_widget_get_window(panel);
-    gdk_window_get_position(window, &x, &y);
-    
-    //DBG("Panel size: (%d, %d) (%d, %d) %s", x, y, allocation->width, allocation->height, G_OBJECT_TYPE_NAME(G_OBJECT(panel)));
-}
-
 static void opacity_plugin_construct(XfcePanelPlugin *panel_plugin) {
     GError* error;
     OpacityPlugin *plugin;
@@ -452,30 +440,10 @@ static void opacity_plugin_construct(XfcePanelPlugin *panel_plugin) {
     
     xfconf_init(&error);
     
-    //gint timeout;
-    plugin = XFCE_OPACITY_PLUGIN(panel_plugin);
-    //GtkWidget *panel_widget;
-    //gint x = -1, y = -1, w = -1, h = -1;
-    
-
-    
+    plugin = XFCE_OPACITY_PLUGIN(panel_plugin);  
     
     xfce_panel_plugin_menu_show_configure(panel_plugin);
     xfce_panel_plugin_menu_show_about(panel_plugin);
-    // Makes the item 1px wide. Can probably do better.
-    //gtk_plug_get_embedded
-    
-    {
-    const gchar *property_base = xfce_panel_plugin_get_property_base(panel_plugin);
-    DBG("Base: %s", property_base);
-    }
-    
-    DBG("CONSTRUCT");
-    
-    
-    //xfconf_g_property_bind(NULL, "near-alpha", G_TYPE_UINT, plugin, "near-alpha");
-    //xfconf_g_property_bind(NULL, "far-alpha", G_TYPE_UINT, plugin, "far-alpha");
-    // Connect properties.
     
     panel_properties_bind(
         NULL, 
@@ -485,34 +453,19 @@ static void opacity_plugin_construct(XfcePanelPlugin *panel_plugin) {
         FALSE
     );
     
-    //gdk_window_invalidate_region
-    
-    {
         GtkWidget *panel;
         
-        // Not the actual GdkWindow, but can call gtk_widget_get_window() to get the panel's real window.
-        panel = gtk_widget_get_parent(gtk_widget_get_parent(GTK_WIDGET(panel_plugin)));
-        
-        g_signal_connect(panel, "size-allocate", G_CALLBACK(panel_size_changed), NULL);
-        
-        DBG("Panel: %s", G_OBJECT_TYPE_NAME(G_OBJECT(panel)));
-        DBG("Plugin: %s", G_OBJECT_TYPE_NAME(G_OBJECT(panel)));
-    }
-
-       //update(plugin);
-    g_timeout_add(UPDATE_INTERVAL, update, plugin); // UNSAFE!!!
+    // Not the actual GdkWindow, but can call gtk_widget_get_window() to get the panel's real window.
+    panel = gtk_widget_get_parent(gtk_widget_get_parent(GTK_WIDGET(panel_plugin)));
+    g_timeout_add(UPDATE_INTERVAL, update, plugin); // I previously wrote UNSAFE!!! here and have no idea why.
     
-    gtk_widget_hide(GTK_WIDGET(panel_plugin));    
+    gtk_widget_hide(GTK_WIDGET(panel_plugin)); // Not working sometimes? Investigate.
 }
 
-static void opacity_plugin_free_data(XfcePanelPlugin *panel_plugin) {
-    //OpacityPlugin *plugin = XFCE_OPACITY_PLUGIN(panel_plugin);   
-        
+static void opacity_plugin_free_data(XfcePanelPlugin *panel_plugin) {       
     panel_properties_unbind(G_OBJECT(panel_plugin));
     xfconf_shutdown();
 }
-
-// We can respond to panel mode changes if we want.
 
 
 
