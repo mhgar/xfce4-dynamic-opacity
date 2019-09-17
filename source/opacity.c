@@ -39,9 +39,9 @@
 #define WNCK_I_KNOW_THIS_IS_UNSTABLE // K
 #include <libwnck/libwnck.h>
 
-#include "panel-private.h"
-#include "panel-xfconf.h"
-#include "panel-utils.h"
+#include <common/panel-private.h>
+#include <common/panel-xfconf.h>
+#include <common/panel-utils.h>
 
 
 #include <limits.h>
