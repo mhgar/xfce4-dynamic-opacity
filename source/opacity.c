@@ -134,6 +134,12 @@ static gboolean update(gpointer data) {
     GdkRectangle panel_geom;
     gdk_window_get_geometry(panel_window, &(panel_geom.x), &(panel_geom.y), &(panel_geom.width), &(panel_geom.height));
     
+    // Extend bounds.          
+    panel_geom.x -= plugin->x_proximity;
+    panel_geom.width += plugin->x_proximity * 2;
+    panel_geom.y -= plugin->y_proximity;
+    panel_geom.height += plugin->y_proximity * 2;
+    
     for (GList *windows = wnck_screen_get_windows(wnck_globals.screen); windows != NULL; windows = windows->next) {        
         WnckWindow *window = WNCK_WINDOW(windows->data);
         
@@ -143,12 +149,6 @@ static gboolean update(gpointer data) {
 
         GdkRectangle window_geom;
         wnck_window_get_geometry(window, &(window_geom.x), &(window_geom.y), &(window_geom.width), &(window_geom.height));
-        
-        // Extend bounds.            
-        panel_geom.x -= plugin->x_proximity;
-        panel_geom.width += plugin->x_proximity * 2;
-        panel_geom.y -= plugin->y_proximity;
-        panel_geom.height += plugin->y_proximity * 2;
         
         if (!gdk_rectangle_intersect(&panel_geom, &window_geom, NULL)) continue;
         
