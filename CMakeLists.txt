@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.9)
 project("xfce4-dynamic-opacity")
 set(CMAKE_C_STANDARD 11)
 
+add_compile_definitions(PACKAGE_NAME="xfce4-dynamic-opacity")
+
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 add_subdirectory(source)
 
