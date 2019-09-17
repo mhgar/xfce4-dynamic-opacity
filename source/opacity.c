@@ -124,58 +124,42 @@ XFCE_PANEL_DEFINE_PLUGIN(OpacityPlugin, opacity_plugin)
 
 WnckGlobals wnck_globals;
 
-static gboolean update(gpointer data) {    
-    OpacityPlugin *plugin;
-    GtkWidget *panel;
-    GdkWindow *panel_window;
-    guint last_alpha;
-    
-    plugin = XFCE_OPACITY_PLUGIN(data);
-    panel = gtk_widget_get_parent(gtk_widget_get_parent(GTK_WIDGET(plugin)));    
-    panel_window = gtk_widget_get_window(panel);
-    last_alpha = plugin->current_alpha;
+static gboolean update(gpointer data) {        
+    OpacityPlugin *plugin = XFCE_OPACITY_PLUGIN(data);
+    GtkWidget *panel = gtk_widget_get_parent(gtk_widget_get_parent(GTK_WIDGET(plugin)));    
+    GdkWindow *panel_window = gtk_widget_get_window(panel);
+    guint last_alpha = plugin->current_alpha;
     plugin->is_near = FALSE;
-
-    {
-        GList *windows;        
-        
-        for (windows = wnck_screen_get_windows(wnck_globals.screen); windows != NULL; windows = windows->next) {
-            GdkRectangle panel_geom, window_geom, intersect;
-            WnckWindow *window;
-            
-            window = WNCK_WINDOW(windows->data);
-            
-            if (wnck_window_get_state(window) & WNCK_WINDOW_STATE_SKIP_PAGER) continue;
-            if (wnck_window_is_minimized(window)) continue;
-            if (!wnck_window_is_on_workspace(window, wnck_screen_get_active_workspace(wnck_globals.screen))) continue;
-            
-            gdk_window_get_geometry(panel_window, &(panel_geom.x), &(panel_geom.y), &(panel_geom.width), &(panel_geom.height));
-            wnck_window_get_geometry(window, &(window_geom.x), &(window_geom.y), &(window_geom.width), &(window_geom.height));
-            
-            // Extend bounds.            
-            panel_geom.x -= plugin->x_proximity;
-            panel_geom.width += plugin->x_proximity * 2;
-            panel_geom.y -= plugin->y_proximity;
-            panel_geom.height += plugin->y_proximity * 2;
-            
-            if (!gdk_rectangle_intersect(&panel_geom, &window_geom, &intersect)) continue;
-            
-            //DBG("(%d, %d, %d, %d) intersects (%d, %d, %d, %d) by (%d, %d, %d, %d) (%s)", (panel_geom.x), (panel_geom.y), (panel_geom.width), (panel_geom.height), (window_geom.x), (window_geom.y), (window_geom.width), (window_geom.height), (intersect.x), (intersect.y), (intersect.width), (intersect.height), wnck_window_get_name(window));
-            plugin->is_near = TRUE;
-        }
-    }
     
+    GdkRectangle panel_geom;
+    gdk_window_get_geometry(panel_window, &(panel_geom.x), &(panel_geom.y), &(panel_geom.width), &(panel_geom.height));
+    
+    for (GList *windows = wnck_screen_get_windows(wnck_globals.screen); windows != NULL; windows = windows->next) {        
+        WnckWindow *window = WNCK_WINDOW(windows->data);
+        
+        if (wnck_window_get_state(window) & WNCK_WINDOW_STATE_SKIP_PAGER) continue;
+        if (wnck_window_is_minimized(window)) continue;
+        if (!wnck_window_is_on_workspace(window, wnck_screen_get_active_workspace(wnck_globals.screen))) continue;       
 
+        GdkRectangle window_geom;
+        wnck_window_get_geometry(window, &(window_geom.x), &(window_geom.y), &(window_geom.width), &(window_geom.height));
+        
+        // Extend bounds.            
+        panel_geom.x -= plugin->x_proximity;
+        panel_geom.width += plugin->x_proximity * 2;
+        panel_geom.y -= plugin->y_proximity;
+        panel_geom.height += plugin->y_proximity * 2;
+        
+        if (!gdk_rectangle_intersect(&panel_geom, &window_geom, NULL)) continue;
+        
+        plugin->is_near = TRUE;
+    }
     
     opacity_plugin_transition_to_alpha(UPDATE_INTERVAL, plugin);
     
-    
-    if (last_alpha != plugin->current_alpha) {
-        XfconfChannel *channel;
-        gdouble alpha;
-        
-        channel = xfconf_channel_get("xfce4-panel");
-        alpha = ((gdouble) plugin->current_alpha) / 255.0;
+    if (last_alpha != plugin->current_alpha) {       
+        XfconfChannel *channel = xfconf_channel_get("xfce4-panel");
+        gdouble alpha = ((gdouble) plugin->current_alpha) / 255.0;
         
         xfconf_channel_set_array(channel, "/panels/panel-0/background-rgba", G_TYPE_DOUBLE, &black, G_TYPE_DOUBLE, &black, G_TYPE_DOUBLE, &black, G_TYPE_DOUBLE, &alpha, G_TYPE_INVALID);
         gdk_window_invalidate_rect(panel_window, NULL, FALSE);
@@ -423,7 +407,7 @@ void opacity_plugin_transition_to_alpha(const guint interval_ms, OpacityPlugin *
 
 static void opacity_plugin_construct(XfcePanelPlugin *panel_plugin) {
     GError* error;
-    OpacityPlugin *plugin;
+    xfconf_init(&error);
     
     const PanelProperty properties[] = {
         { "override-style", G_TYPE_BOOLEAN },
@@ -438,9 +422,7 @@ static void opacity_plugin_construct(XfcePanelPlugin *panel_plugin) {
         { "is-near", G_TYPE_BOOLEAN },
     };
     
-    xfconf_init(&error);
-    
-    plugin = XFCE_OPACITY_PLUGIN(panel_plugin);  
+    OpacityPlugin *plugin = XFCE_OPACITY_PLUGIN(panel_plugin);  
     
     xfce_panel_plugin_menu_show_configure(panel_plugin);
     xfce_panel_plugin_menu_show_about(panel_plugin);
@@ -452,11 +434,9 @@ static void opacity_plugin_construct(XfcePanelPlugin *panel_plugin) {
         properties, 
         FALSE
     );
-    
-        GtkWidget *panel;
         
     // Not the actual GdkWindow, but can call gtk_widget_get_window() to get the panel's real window.
-    panel = gtk_widget_get_parent(gtk_widget_get_parent(GTK_WIDGET(panel_plugin)));
+    GtkWidget *panel = gtk_widget_get_parent(gtk_widget_get_parent(GTK_WIDGET(panel_plugin)));
     g_timeout_add(UPDATE_INTERVAL, update, plugin); // I previously wrote UNSAFE!!! here and have no idea why.
     
     gtk_widget_hide(GTK_WIDGET(panel_plugin)); // Not working sometimes? Investigate.
