@@ -24,12 +24,7 @@
 #endif
 
 #include <gtk/gtk.h>
-
-// For finding the GtkSocket of the plugin. Used for getting the panel's GtkWindow properties.
-#include <gtk/gtkx.h> 
-#include <gdk/gdk.h> // GDK, not GTK
-//#include <glib-object.h>
-//#include <gobject/gvaluecollector.h>
+#include <gdk/gdk.h>
 
 #include <libxfce4ui/libxfce4ui.h>
 #include <libxfce4util/libxfce4util.h>
