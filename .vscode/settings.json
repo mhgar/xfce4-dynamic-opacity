@@ -1,0 +1,13 @@
+{
+    "files.exclude": {
+        "**/*.a": true,
+        "**/*.cmake": true,
+        "**/*.la": true,
+        "**/*.png": true,
+        "**/*.so": true,
+        "**/CMakeCache.txt": true,
+        "**/CMakeFiles": true,
+        "**/install_manifest.txt": true,
+        "**/Makefile": true
+    }
+}
