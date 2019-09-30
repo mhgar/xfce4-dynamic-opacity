@@ -29,8 +29,6 @@ link_directories(${XFCE4UTIL_LIBRARY_DIRS})
 link_directories(${XFCONF_LIBRARY_DIRS})
 link_directories(${WNCK_LIBRARY_DIRS})
 
-
-# Create libs
 add_library(opacity-plugin SHARED opacity.c opacity-dialogs.c)
 
 target_link_libraries(opacity-plugin common)
@@ -41,8 +39,5 @@ target_link_libraries(opacity-plugin ${XFCE4PANEL_LIBRARY_DIRS})
 target_link_libraries(opacity-plugin ${XFCE4UTIL_LIBRARY_DIRS})
 target_link_libraries(opacity-plugin ${XFCONF_LIBRARY_DIRS})
 target_link_libraries(opacity-plugin ${WNCK_LIBRARY_DIRS})
-
-
-install(FILES libopacity-plugin.so DESTINATION /lib/xfce4/panel/plugins/)
 
 add_subdirectory(common)
