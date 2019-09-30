@@ -119,8 +119,10 @@ XFCE_PANEL_DEFINE_PLUGIN(OpacityPlugin, opacity_plugin)
 
 WnckGlobals wnck_globals;
 
-static gboolean update(gpointer data) {        
+static gboolean update(gpointer data) {
     OpacityPlugin *plugin = XFCE_OPACITY_PLUGIN(data);
+    gtk_widget_hide(GTK_WIDGET(plugin)); // Hack to prevent the plugin from wanting to take up space.
+
     GtkWidget *panel = gtk_widget_get_parent(gtk_widget_get_parent(GTK_WIDGET(plugin)));    
     GdkWindow *panel_window = gtk_widget_get_window(panel);
     guint last_alpha = plugin->current_alpha;
@@ -433,7 +435,7 @@ static void opacity_plugin_construct(XfcePanelPlugin *panel_plugin) {
     // Not the actual GdkWindow, but can call gtk_widget_get_window() to get the panel's real window.
     GtkWidget *panel = gtk_widget_get_parent(gtk_widget_get_parent(GTK_WIDGET(panel_plugin)));
     g_timeout_add(UPDATE_INTERVAL, update, plugin); // I previously wrote UNSAFE!!! here and have no idea why.
-    
+
     gtk_widget_hide(GTK_WIDGET(panel_plugin)); // Not working sometimes? Investigate.
 }
 
@@ -441,16 +443,3 @@ static void opacity_plugin_free_data(XfcePanelPlugin *panel_plugin) {
     panel_properties_unbind(G_OBJECT(panel_plugin));
     xfconf_shutdown();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
