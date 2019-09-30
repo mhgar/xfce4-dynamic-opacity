@@ -1,5 +1,5 @@
 # xfce4-dynamic-opacity
-A panel plugin that modifies the panel's opacity when a window is near. It works on a per-panel basis, just add the plugin to the desired panels and you're set.
+A panel plugin that modifies the panel's opacity when a window is near. There's a fade effect that forces the panel to refresh, so the entire panel should have a uniform opacity. It works on a per-panel basis, just add the plugin to the desired panels and you're set.
 
 I wrestled with CMake instead of XFCE's build tools, so if something goes wrong blame CMake. Right now the timings for transitions aren't correct, and a lot of the program is a horrible mess of GObject code. The times of the commits are also ruined because the time on my VM was off by 13 days.
 
