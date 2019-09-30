@@ -7,6 +7,6 @@ I wrestled with CMake instead of XFCE's build tools, so if something goes wrong 
 
 ## Installation
 You'll first need ``gcc`` and ``make``. Clone, then run this in the project's root:
-``$ cmake ./CMakeLists.txt && make && sudo make install`` 
+``$ cmake ./CMakeLists.txt && make && sudo make install``. After adding to the panel you might need to fiddle with the settings to generate the xfconf entries, but it should work fine.
 
 If you need to uninstall, remove the files listed in the newly created ``install_manifest.txt`` file. 
