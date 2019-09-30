@@ -6,7 +6,7 @@ I wrestled with CMake instead of XFCE's build tools, so if something goes wrong 
 ![Far](https://raw.githubusercontent.com/mhgar/xfce4-dynamic-opacity/master/1.png) ![Near](https://raw.githubusercontent.com/mhgar/xfce4-dynamic-opacity/master/2.png)
 
 ## Installation
-Clone, then run this in the project's root:
+You'll first need ``gcc`` and ``make``. Clone, then run this in the project's root:
 ``$ cmake ./CMakeLists.txt && make && sudo make install`` 
 
 If you need to uninstall, remove the files listed in the newly created ``install_manifest.txt`` file. 
