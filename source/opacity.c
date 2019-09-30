@@ -61,6 +61,8 @@ static gboolean update(gpointer data);
 
 void opacity_plugin_transition_to_alpha(const guint interval_ms, OpacityPlugin *plugin);
 
+static GdkWindow *get_panel_window(XfcePanelPlugin *panel_plugin);
+
 static float clamped_lerp(float a, float b, float t) {
     if (t <= 0.0f) return a;
     if (t >= 1.0f) return b;
@@ -116,15 +118,17 @@ struct _OpacityPlugin {
 
 XFCE_PANEL_DEFINE_PLUGIN(OpacityPlugin, opacity_plugin)
 
-
 WnckGlobals wnck_globals;
+
+static GdkWindow *get_panel_window(XfcePanelPlugin *panel_plugin) {
+    return gtk_widget_get_window(gtk_widget_get_parent(gtk_widget_get_parent(GTK_WIDGET(panel_plugin))));
+}
 
 static gboolean update(gpointer data) {
     OpacityPlugin *plugin = XFCE_OPACITY_PLUGIN(data);
     gtk_widget_hide(GTK_WIDGET(plugin)); // Hack to prevent the plugin from wanting to take up space.
 
-    GtkWidget *panel = gtk_widget_get_parent(gtk_widget_get_parent(GTK_WIDGET(plugin)));    
-    GdkWindow *panel_window = gtk_widget_get_window(panel);
+    GdkWindow *panel_window = get_panel_window(XFCE_PANEL_PLUGIN(plugin));
     guint last_alpha = plugin->current_alpha;
     plugin->is_near = FALSE;
     
@@ -431,9 +435,7 @@ static void opacity_plugin_construct(XfcePanelPlugin *panel_plugin) {
         properties, 
         FALSE
     );
-        
-    // Not the actual GdkWindow, but can call gtk_widget_get_window() to get the panel's real window.
-    GtkWidget *panel = gtk_widget_get_parent(gtk_widget_get_parent(GTK_WIDGET(panel_plugin)));
+
     g_timeout_add(UPDATE_INTERVAL, update, plugin); // I previously wrote UNSAFE!!! here and have no idea why.
 
     gtk_widget_hide(GTK_WIDGET(panel_plugin)); // Not working sometimes? Investigate.
