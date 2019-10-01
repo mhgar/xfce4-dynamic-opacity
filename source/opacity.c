@@ -61,6 +61,7 @@ static gboolean update(gpointer data);
 
 void opacity_plugin_transition_to_alpha(const guint interval_ms, OpacityPlugin *plugin);
 
+static void gdk_window_get_geometry_quick(GdkWindow *window, gint *x, gint *y, gint *width, gint *height);
 static GdkWindow *get_panel_window(XfcePanelPlugin *panel_plugin);
 static gint get_panel_id(XfcePanelPlugin *panel_plugin);
 
@@ -123,6 +124,12 @@ XFCE_PANEL_DEFINE_PLUGIN(OpacityPlugin, opacity_plugin)
 
 WnckGlobals wnck_globals;
 
+static void gdk_window_get_geometry_quick(GdkWindow *window, gint *x, gint *y, gint *width, gint *height) {
+    gdk_window_get_position(window, x, y);
+    *width = gdk_window_get_width(window);
+    *height = gdk_window_get_height(window);
+}
+
 static GdkWindow *get_panel_window(XfcePanelPlugin *panel_plugin) {
     return gtk_widget_get_window(gtk_widget_get_parent(gtk_widget_get_parent(GTK_WIDGET(panel_plugin))));
 }
@@ -144,7 +151,7 @@ static gboolean update(gpointer data) {
     plugin->is_near = FALSE;
     
     GdkRectangle panel_geom;
-    gdk_window_get_geometry(panel_window, &(panel_geom.x), &(panel_geom.y), &(panel_geom.width), &(panel_geom.height));
+    gdk_window_get_geometry_quick(panel_window, &(panel_geom.x), &(panel_geom.y), &(panel_geom.width), &(panel_geom.height));
     
     //DBG("%d %d %d %d", panel_geom.x, panel_geom.y, panel_geom.width, panel_geom.height);
 
