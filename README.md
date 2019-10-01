@@ -7,6 +7,7 @@ I wrestled with CMake instead of XFCE's build tools, so if something goes wrong 
 
 ## Installation
 You'll first need ``gcc`` and ``make``. Clone, then run this in the project's root:
-``$ cmake ./CMakeLists.txt && make && sudo make install``. After adding to the panel you might need to fiddle with the settings to generate the xfconf entries, but it should work fine. You'll also need to enable "Allow forcing panel's background style" if your panel is not already in "Solid color" mode. Your currently selected solid colour will be replaced with black, but I hope to change this in a later version.
+``$ cmake ./CMakeLists.txt && make && sudo make install``. If you need to uninstall, remove the files listed in the newly created ``install_manifest.txt`` file. You can use ``cat install_manifest.txt | xargs sudo rm`` if you're lazy.
 
-If you need to uninstall, remove the files listed in the newly created ``install_manifest.txt`` file. 
+## Troubleshooting
+After adding to the panel you might need to fiddle with the settings to generate the xfconf entries, but it should work fine out of the box. You'll also need to enable "Allow forcing panel's background style" if your panel is not already in "Solid color" mode. Your currently selected solid colour will be replaced with black, but I hope to change this in a later version. In some cases the GTK theme can affect how the panel renders, which may case uneven bumps in the panel where other plugins are located. In this case you must change the GTK theme of ``xfce4-panel``, if you search around you can find information on how to set a GTK theme for a specific program.
