@@ -382,13 +382,12 @@ static void opacity_plugin_set_property(GObject *object, guint prop_id, const GV
         // May want to add diff setting.
         plugin->override_style = g_value_get_boolean(value);
         if (plugin->override_style) {            
-            XfconfChannel *channel = xfconf_channel_get("xfce4-panel");
-            gint panel_id = -1;
-            get_panel_id(XFCE_PANEL_PLUGIN(plugin));
+            gint panel_id = get_panel_id(XFCE_PANEL_PLUGIN(plugin));
 
             if (panel_id != -1) {
                 DBG("Found panel %d", panel_id);
 
+                XfconfChannel *channel = xfconf_channel_get("xfce4-panel");
                 gchar* property = g_strdup_printf("/panels/panel-%d/background-style", panel_id);
                 xfconf_channel_set_uint(channel, property, 1);
                 
