@@ -3,6 +3,7 @@ project("xfce4-dynamic-opacity")
 set(CMAKE_C_STANDARD 11)
 
 add_compile_definitions(PACKAGE_NAME="xfce4-dynamic-opacity")
+add_compile_definitions(DEBUG) # Gives us DBG messages
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 add_subdirectory(source)

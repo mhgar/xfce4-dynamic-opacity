@@ -62,6 +62,7 @@ static gboolean update(gpointer data);
 void opacity_plugin_transition_to_alpha(const guint interval_ms, OpacityPlugin *plugin);
 
 static GdkWindow *get_panel_window(XfcePanelPlugin *panel_plugin);
+static gint get_panel_id(XfcePanelPlugin *panel_plugin);
 
 static float clamped_lerp(float a, float b, float t) {
     if (t <= 0.0f) return a;
@@ -93,7 +94,8 @@ enum {
     PROP_TRANSITION_TIME,
     PROP_CURRENT_ALPHA,
     PROP_IS_NEAR,
-    PROP_BG_COLOR
+    PROP_BG_COLOR,
+    PROP_TIMEOUT_TAG
 };
 
 struct _OpacityPluginClass {
@@ -114,6 +116,7 @@ struct _OpacityPlugin {
     // Live data
     guint     current_alpha; // Overrides color's alpha
     gboolean  is_near;
+    gint timeout_tag;
 };
 
 XFCE_PANEL_DEFINE_PLUGIN(OpacityPlugin, opacity_plugin)
@@ -122,6 +125,14 @@ WnckGlobals wnck_globals;
 
 static GdkWindow *get_panel_window(XfcePanelPlugin *panel_plugin) {
     return gtk_widget_get_window(gtk_widget_get_parent(gtk_widget_get_parent(GTK_WIDGET(panel_plugin))));
+}
+
+static gint get_panel_id(XfcePanelPlugin *panel_plugin) {
+    GtkWidget *panel = gtk_widget_get_parent(gtk_widget_get_parent(GTK_WIDGET(panel_plugin)));
+    gint value;
+    g_object_get(G_OBJECT(panel), "id", &value, NULL);
+
+    return value;
 }
 
 static gboolean update(gpointer data) {
@@ -135,11 +146,13 @@ static gboolean update(gpointer data) {
     GdkRectangle panel_geom;
     gdk_window_get_geometry(panel_window, &(panel_geom.x), &(panel_geom.y), &(panel_geom.width), &(panel_geom.height));
     
+    //DBG("%d %d %d %d", panel_geom.x, panel_geom.y, panel_geom.width, panel_geom.height);
+
     // Extend bounds.          
     panel_geom.x -= plugin->x_proximity;
     panel_geom.width += plugin->x_proximity * 2;
     panel_geom.y -= plugin->y_proximity;
-    panel_geom.height += plugin->y_proximity * 2;
+    panel_geom.height += plugin->y_proximity * 2;    
     
     for (GList *windows = wnck_screen_get_windows(wnck_globals.screen); windows != NULL; windows = windows->next) {        
         WnckWindow *window = WNCK_WINDOW(windows->data);
@@ -161,9 +174,19 @@ static gboolean update(gpointer data) {
     if (last_alpha != plugin->current_alpha) {       
         XfconfChannel *channel = xfconf_channel_get("xfce4-panel");
         gdouble alpha = ((gdouble) plugin->current_alpha) / 255.0;
-        
-        xfconf_channel_set_array(channel, "/panels/panel-0/background-rgba", G_TYPE_DOUBLE, &black, G_TYPE_DOUBLE, &black, G_TYPE_DOUBLE, &black, G_TYPE_DOUBLE, &alpha, G_TYPE_INVALID);
-        gdk_window_invalidate_rect(panel_window, NULL, FALSE);
+
+        gint panel_id = get_panel_id(XFCE_PANEL_PLUGIN(plugin));
+
+        if (panel_id != -1) {
+            gchar* property = g_strdup_printf("/panels/panel-%d/background-rgba", panel_id);
+
+            xfconf_channel_set_array(channel, property, G_TYPE_DOUBLE, &black, G_TYPE_DOUBLE, &black, G_TYPE_DOUBLE, &black, G_TYPE_DOUBLE, &alpha, G_TYPE_INVALID);
+            gdk_window_invalidate_rect(panel_window, NULL, FALSE);
+            
+            g_free(property);
+        } else {
+            DBG("Could not find the panel!");
+        }
     }
     
     return TRUE;
@@ -293,6 +316,17 @@ static void opacity_plugin_class_init(OpacityPluginClass *class) {
             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS
         )
     );
+
+    g_object_class_install_property(
+        gobject_class, 
+        PROP_TIMEOUT_TAG,
+        g_param_spec_int(
+            "timeout-tag",
+            NULL, NULL,
+            INT_MIN, INT_MAX, -1,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS
+        )
+    );
 }
 
 static void opacity_plugin_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec) {
@@ -324,6 +358,9 @@ static void opacity_plugin_get_property(GObject *object, guint prop_id, GValue *
     case PROP_IS_NEAR:
         g_value_set_boolean(value, plugin->is_near);
         break;
+    case PROP_TIMEOUT_TAG:
+        g_value_set_int(value, plugin->timeout_tag);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
     }
@@ -337,6 +374,25 @@ static void opacity_plugin_set_property(GObject *object, guint prop_id, const GV
     case PROP_OVERRIDE_STYLE:
         // May want to add diff setting.
         plugin->override_style = g_value_get_boolean(value);
+        if (plugin->override_style) {            
+            XfconfChannel *channel = xfconf_channel_get("xfce4-panel");
+            gint panel_id = -1;
+            get_panel_id(XFCE_PANEL_PLUGIN(plugin));
+
+            if (panel_id != -1) {
+                DBG("Found panel %d", panel_id);
+
+                gchar* property = g_strdup_printf("/panels/panel-%d/background-style", panel_id);
+                xfconf_channel_set_uint(channel, property, 1);
+                
+                GdkWindow *panel_window = get_panel_window(XFCE_PANEL_PLUGIN(plugin));
+                gdk_window_invalidate_rect(panel_window, NULL, FALSE);
+
+                g_free(property);
+            } else {
+                DBG("Could not find the panel!");
+            }
+        }
         break;
     case PROP_X_PROXIMITY:
         plugin->x_proximity = g_value_get_uint(value);
@@ -360,6 +416,9 @@ static void opacity_plugin_set_property(GObject *object, guint prop_id, const GV
         // We might want to prep transitioning here.
         plugin->is_near = g_value_get_boolean(value);
         break;
+    case PROP_TIMEOUT_TAG:
+        plugin->timeout_tag = g_value_get_int(value);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
     }
@@ -377,6 +436,7 @@ static void opacity_plugin_init(OpacityPlugin *plugin) {
     // Start opaque, it'll transition to light if it needs to.
     plugin->current_alpha = DEFAULT_CURRENT_ALPHA;
     plugin->is_near = DEFAULT_IS_NEAR;
+    plugin->timeout_tag = -1;
 }
 
 void opacity_plugin_transition_to_alpha(const guint interval_ms, OpacityPlugin *plugin) {
@@ -421,9 +481,9 @@ static void opacity_plugin_construct(XfcePanelPlugin *panel_plugin) {
         // Unsure about exposing these, but might make referencing easier.
         { "current-alpha", G_TYPE_UINT },
         { "is-near", G_TYPE_BOOLEAN },
-    };
-    
-    OpacityPlugin *plugin = XFCE_OPACITY_PLUGIN(panel_plugin);  
+        { "timeout-tag", G_TYPE_INT },
+        NULL,
+    };  
     
     xfce_panel_plugin_menu_show_configure(panel_plugin);
     xfce_panel_plugin_menu_show_about(panel_plugin);
@@ -433,15 +493,24 @@ static void opacity_plugin_construct(XfcePanelPlugin *panel_plugin) {
         G_OBJECT(panel_plugin), 
         xfce_panel_plugin_get_property_base(panel_plugin), 
         properties, 
-        FALSE
+        TRUE // Could be FALSE
     );
 
-    g_timeout_add(UPDATE_INTERVAL, update, plugin); // I previously wrote UNSAFE!!! here and have no idea why.
+    OpacityPlugin *plugin = XFCE_OPACITY_PLUGIN(panel_plugin);
+
+    gint timeout_tag = g_timeout_add(UPDATE_INTERVAL, update, plugin); // I previously wrote UNSAFE!!! here and have no idea why.
+    plugin->timeout_tag = timeout_tag;
 
     gtk_widget_hide(GTK_WIDGET(panel_plugin)); // Not working sometimes? Investigate.
+
+    gint panel_id = get_panel_id(XFCE_PANEL_PLUGIN(plugin));
+    DBG("Constructed on %d", panel_id);
 }
 
-static void opacity_plugin_free_data(XfcePanelPlugin *panel_plugin) {       
+static void opacity_plugin_free_data(XfcePanelPlugin *panel_plugin) {
+    OpacityPlugin *plugin = XFCE_OPACITY_PLUGIN(panel_plugin);
+    g_source_remove(plugin->timeout_tag);
+
     panel_properties_unbind(G_OBJECT(panel_plugin));
     xfconf_shutdown();
 }
