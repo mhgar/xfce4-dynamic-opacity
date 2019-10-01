@@ -6,7 +6,7 @@ I wrestled with CMake instead of XFCE's build tools, so if something goes wrong 
 ![Far](https://raw.githubusercontent.com/mhgar/xfce4-dynamic-opacity/master/1.png) ![Near](https://raw.githubusercontent.com/mhgar/xfce4-dynamic-opacity/master/2.png)
 
 ## Installation
-You'll naturally need a copy of the XFCE desktop environment. It is prefered that you have at least version **4.14** because of the move to **GTK3**. If you want to try to build this for an earlier version, you could change ``pkg_check_modules(GTK3 REQUIRED gtk+-3.0)`` to ``pkg_check_modules(GTK3 REQUIRED gtk+-2.0)`` in ``source/CMakeLists.txt``. I have no idea if that will work.
+You'll naturally need a copy of the XFCE desktop environment. **It is prefered that you have at least version 4.14 because of the move to GTK3**. If you want to try to build this for an earlier version, you could change ``pkg_check_modules(GTK3 REQUIRED gtk+-3.0)`` to ``pkg_check_modules(GTK3 REQUIRED gtk+-2.0)`` in ``source/CMakeLists.txt``. I have no idea if that will work.
 
 To build you'll need ``gcc``, ``make`` and ``cmake``. Clone, then run this in the project's root:
 ``$ cmake ./CMakeLists.txt && make``. To install just run ``sudo make install``.
