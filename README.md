@@ -7,6 +7,6 @@ I wrestled with CMake instead of XFCE's build tools, so if something goes wrong 
 
 ## Installation
 You'll first need ``gcc`` and ``make``. Clone, then run this in the project's root:
-``$ cmake ./CMakeLists.txt && make && sudo make install``. After adding to the panel you might need to fiddle with the settings to generate the xfconf entries, but it should work fine.
+``$ cmake ./CMakeLists.txt && make && sudo make install``. After adding to the panel you might need to fiddle with the settings to generate the xfconf entries, but it should work fine. You'll also need to enable "Allow forcing panel's background style" if your panel is not already in "Solid color" mode. Your currently selected solid colour will be replaced with black, but I hope to change this in a later version.
 
 If you need to uninstall, remove the files listed in the newly created ``install_manifest.txt`` file. 
