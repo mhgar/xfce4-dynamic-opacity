@@ -78,7 +78,20 @@ static float clamped_lerp(float a, float b, float t) {
 //static int min(int a, int b) { return a < b ? a : b; }
 //static int man(int a, int b) { return a > b ? a : b; }
 
-static gdouble black = 0.0;
+
+/*
+    I need confirmation that this is how it works, because I can't find the correct documentation,
+    but it seems to be rgb values. If you are like me and don't know how to express rgb values
+    from 0.0 to 1.0, select your desired color on your panel, and then go to your xfconf settings 
+    file (mine is located at $HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml) and
+    search for <property name="background-rgba" type="array"> and there you will have all the
+    values for your color.
+    
+*/
+static gdouble g_red = 0.0;     // Value goes from 0.0 to 1.0
+static gdouble g_green = 0.0;   // Value goes from 0.0 to 1.0
+static gdouble g_blue = 0.0;    // Value goes from 0.0 to 1.0
+
 
 typedef struct {
     gboolean has_init;
@@ -187,7 +200,7 @@ static gboolean update(gpointer data) {
         if (panel_id != -1) {
             gchar* property = g_strdup_printf("/panels/panel-%d/background-rgba", panel_id);
 
-            xfconf_channel_set_array(channel, property, G_TYPE_DOUBLE, &black, G_TYPE_DOUBLE, &black, G_TYPE_DOUBLE, &black, G_TYPE_DOUBLE, &alpha, G_TYPE_INVALID);
+            xfconf_channel_set_array(channel, property, G_TYPE_DOUBLE, &g_red, G_TYPE_DOUBLE, &g_green, G_TYPE_DOUBLE, &g_blue, G_TYPE_DOUBLE, &alpha, G_TYPE_INVALID);
             gdk_window_invalidate_rect(panel_window, NULL, FALSE);
             
             g_free(property);

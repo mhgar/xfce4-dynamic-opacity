@@ -8,6 +8,3 @@ X-XFCE-Module-Path=/usr/lib/xfce4/panel-plugins
 X-XFCE-Internal=true
 X-XFCE-Unique=false
 X-XFCE-API=2.0
-
-[Desktop Entry]
-Type=Application

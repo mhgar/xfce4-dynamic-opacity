@@ -52,7 +52,7 @@ typedef struct _OpacityPluginClass OpacityPluginClass;
 #define XFCE_OPACITY_PLUGIN_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), XFCE_TYPE_OPACITY_PLUGIN), OpacityPluginClass)
 
 GType opacity_plugin_get_type (void) G_GNUC_CONST;
-void opacity_plugin_register_type(XfcePanelTypeModule *typeModule);
+void opacity_plugin_register_type(GTypeModule *typeModule);
 
 G_END_DECLS
 
